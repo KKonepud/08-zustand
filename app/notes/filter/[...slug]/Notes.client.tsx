@@ -6,12 +6,11 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useDebouncedCallback } from 'use-debounce';
 import { fetchNotes } from '@/lib/api';
 import NoteList from '@/components/NoteList/NoteList';
-import Modal from '@/components/Modal/Modal';
 import Pagination from '@/components/Pagination/Pagination';
 import SearchBox from '@/components/SearchBox/SearchBox';
-import NoteForm from '@/components/NoteForm/NoteForm';
 import Loader from '@/components/Loader/Loader';
 import ErrorMessage from '@/components/ErrorMessage/ErrorMessage';
+import Link from 'next/link';
 
 interface NotesClientProps {
   tag?: string;
@@ -20,17 +19,12 @@ interface NotesClientProps {
 function App({ tag }: NotesClientProps) {
   const [query, setQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const openModal = () => setIsModalOpen(true);
-
-  const closeModal = () => setIsModalOpen(false);
 
   const perPage = 12;
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['notes', query, currentPage, tag],
-    queryFn: () => fetchNotes(currentPage, perPage, query, tag),
+    queryFn: () => fetchNotes(currentPage, perPage, query, tag === 'all' ? undefined : tag),
     placeholderData: keepPreviousData,
   });
 
@@ -44,7 +38,8 @@ function App({ tag }: NotesClientProps) {
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        {<SearchBox searchValue={query} onSearch={debouncedOnSearch} />}
+        <SearchBox searchValue={query} onSearch={debouncedOnSearch} />
+
         {data && data.totalPages > 1 && (
           <Pagination
             totalPages={data.totalPages}
@@ -52,21 +47,21 @@ function App({ tag }: NotesClientProps) {
             onPageChange={setCurrentPage}
           />
         )}
-        <button onClick={openModal} className={css.button}>
+
+        <Link href="/notes/action/create" className={css.button}>
           Create note +
-        </button>
+        </Link>
       </header>
+
       {isLoading && <Loader />}
+
       {isError && <ErrorMessage />}
+
       {data && data.notes.length === 0 && (
         <p className={css.text}>No notes found for your search.</p>
       )}
+
       {data && data.notes.length > 0 && <NoteList notes={data.notes} />}
-      {isModalOpen && (
-        <Modal onClose={closeModal}>
-          <NoteForm onClose={closeModal} />
-        </Modal>
-      )}
     </div>
   );
 }

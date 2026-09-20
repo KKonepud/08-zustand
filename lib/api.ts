@@ -13,7 +13,6 @@ export const fetchNotes = async (
   search?: string,
   tag?: string
 ): Promise<FetchNotesResponse> => {
-  console.log('TOKEN:', token);
   const response = await axios.get<FetchNotesResponse>(
     'https://notehub-public.goit.study/api/notes',
     {
